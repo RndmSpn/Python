@@ -1,0 +1,287 @@
+﻿
+cd /home/cristian/Escritorio/django/
+
+COMANDOS DJANGO
+
+django-admin startproject
+
+python3 manage.py startapp
+
+python3 manage.py check
+
+python3 manage.py runserver 
+
+
+
+
+BBDD
+
+python3 manage.py makemigrations
+
+python3 manage.py  sqlmigrate Gesal 0001
+
+python3 manage.py  migrate
+
+python3 manage.py shell
+
+from Gesal.models import Articulos
+
+art=Articulos(nombre='nigiri',seccion='sushi' precio=90)
+ art.save()
+
+art.precio=95
+ art.save()
+
+art5=Articulos.objects.get(id=6)
+ art5.delete()
+
+Lista=Articulos.objects.all()
+Lista
+Lista.query.__str_₍)
+
+sudo -u postgres psql
+
+
+nstalar PostgreSQL en Debian / Ubuntu
+Agregar repositorio APT
+sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ `lsb_release -cs`-pgdg main" >> /etc/apt/sources.list.d/pgdg.list'
+wget -q https://www.postgresql.org/media/keys/ACCC4CF8.asc -O - | sudo apt-key add -
+
+Instalar PostgreSQL
+sudo apt-get update
+sudo apt-get install postgresql postgresql-contrib postgresql-client libpq-dev
+Establecer contraseña para el rol de postgres (raíz de PostgreSQL)
+sudo -u postgres psql
+\password
+Deshabilitar la versión de PostgreSQL
+sudo service postgresql status
+9.1/main (port 5432): online
+9.2/main (port 5433): online
+9.4/main (port 5434): online
+
+
+Cada clúster de PostgreSQL en Debian / Ubuntu tiene un start.confarchivo que controla lo que se /etc/init.d/postgresql debe hacer. Reemplazar autocon manualin /etc/postgresql/9.x/main/start.conf.
+
+
+Deshabilitar el arranque automático
+
+update-rc.d -f postgresql remove
+
+Mostrar clústeres
+sudo pg_lsclusters
+
+Actualizar PostgreSQL
+
+Instale la versión más reciente de PostgreSQL. Compruebe si tiene más de un clúster en ejecución.
+sudo pg_lsclusters
+
+Ver Cluster Port Status Owner    Data directory               Log file
+9.6 main    5432 online postgres /var/lib/postgresql/9.6/main /var/log/postgresql/postgresql-9.6-main.log
+10  main    5433 online postgres /var/lib/postgresql/10/main /var/log/postgresql/postgresql-10-main.log
+
+Detener el clúster más nuevo
+sudo pg_dropcluster 10 main –stop
+
+Actualice el clúster más antiguo a la versión más nueva
+sudo pg_upgradecluster 9.6 main
+
+Eliminar el clúster más antiguo
+sudo pg_dropcluster 9.6 main
+
+Usuario
+Un rol es un usuario en un mundo de bases de datos.                                                                                          Los roles están separados de los usuarios del sistema operativo y son globales en un clúster.                                 Los usuarios sin contraseña pueden conectarse al clúster solo localmente (es decir, a través de socket).
+Crear rol
+
+En la línea de comando
+sudo -u postgres createuser [role_name] -d -P
+En psql
+
+CREATE ROLE [role_name] WITH LOGIN CREATEDB PASSWORD '[password]';
+Lista de roles
+En psql
+\du o select * from pg_roles
+
+Cambiar la contraseña de un usuario
+ALTER ROLE [role_name] WITH PASSWORD '[new_password]';
+
+Permitir al usuario crear bases de datos
+ALTER USER <username> WITH CREATEDB;
+Base de datos
+Lista de todas las bases de datos
+en psql
+\l
+Crear base de datos en la línea de comando
+sudo -u postgres createdb [name] -O [role_name]
+en psql
+
+CREATE DATABASE [name] OWNER [role_name];
+Eliminar base de datos
+en la línea de comando
+sudo -u postgres dropdb [name] --if-exists
+en psql
+
+DROP DATABASE IF EXISTS [name];
+
+Exportar base de datos como CSV
+COPY (SELECT * FROM widgets) TO '/absolute/path/to/export.csv'
+WITH FORMAT csv, HEADER true;
+COPYrequiere especificar una ruta absoluta y solo escribe en el sistema de archivos local de la base de datos. \copyes un envoltorio de COPY que elude esas restricciones.
+\copy (SELECT * FROM widgets) TO export.csv
+WITH FORMAT csv, HEADER true
+Puede especificar la codificación de los datos exportados (por ejemplo, latin1para Excel en lugar de utf-8).
+\copy (SELECT * FROM widgets) TO export.csv
+WITH FORMAT csv, HEADER true, ENCODING 'latin1'
+
+Cree una copia de seguridad de la base de datos PostgreSQL comprimida
+pg_dump -U [role_name] [db_name] -Fc > backup.dump
+
+Crear una copia de seguridad de la base de datos de solo esquema
+Sólo esquema significa tablas, índices, disparadores, etc., pero no datos dentro; -s opción de hecho .
+pg_dump -U [role_name] [db_name] -s > schema.sql
+
+Restaurar la base de datos desde el volcado binario
+PGPASSWORD=<password> pg_restore -Fc --no-acl --no-owner -U <user> -d <database> <filename.dump>
+
+Cree copias de seguridad comprimidas para todas las bases de datos a la vez
+pg_dump -Fc
+
+Convertir el volcado de la base de datos binaria en un archivo SQL
+pg_restore binary_file.backup > sql_file.sql
+
+Copie la base de datos rápidamente
+Para copiar una base de datos, creamos una nueva base de datos y especificamos una existente como plantilla.
+createdb -T app_db app_db_backup
+
+Cambiar la propiedad de la base de datos
+ALTER DATABASE acme OWNER TO zaiste;
+
+Mesa
+Tablas de lista
+\dt
+
+Crear mesa
+CREATE TABLE widgets (
+  id BIGINT PRIMARY KEY,
+  name VARCHAR(20),
+  price INT,
+  created_at timestamp without time zone default now()
+)
+Insertar en la mesa
+INSERT INTO widgets VALUES(1,'widget1',100)
+INSERT INTO widgets(name, price) VALUES ('widget2', 101)
+
+Insertar en la mesa
+PostgreSQL 9.5 o más reciente:
+INSERT INTO widgets VALUES ... ON CONFLICT UPDATE
+PostgreSQL 9.4 (y versiones anteriores) no tiene la función UPSERT (o MERGE) incorporada y es difícil hacerlo bien (uso concurrente).
+
+Mesa plegable
+DROP TABLE IF EXISTS widgets
+
+Eliminar todas las filas de la tabla
+DELETE FROM widgets;
+Drop table y dependencias
+DROP TABLE table_name CASCADE;
+
+Columna
+
+Tipos de columna disponibles
+
+Crear tipo de enumeración
+CREATE TYPE environment AS ENUM ('development', 'staging', 'production');
+
+Agregar columna a la tabla
+ALTER TABLE [table_name] ADD COLUMN [column_name] [data_type];
+
+Eliminar columna de la tabla
+ALTER TABLE [table_name] DROP COLUMN [column_name];
+
+Cambiar el tipo de datos de la columna
+ALTER TABLE [table_name] ALTER COLUMN [column_name] [data_type];
+
+Cambiar el nombre de la columna
+ALTER TABLE [table_name] RENAME COLUMN [column_name] TO [new_column_name];
+
+Establecer valor predeterminado para la columna existente
+ALTER TABLE [table_name] ALTER_COLUMN created_at SET DEFAULT now();
+
+Agregar UNIQUErestricción a la columna existente
+ALTER TABLE [table_name] ADD CONSTRAINT [constraint_name] UNIQUE ([column_name]);
+
+o más corto (PostgreSQL asignará automáticamente un nombre de restricción)
+ALTER TABLE [table_name] ADD UNIQUE ([column_name]);
+
+Fecha y hora
+fechas
+clock_timestamp()devuelve el valor actual. now()siempre devuelve el valor actual, a menos que se trate de una transacción, en cuyo caso devuelve el valor desde el comienzo de la transacción.
+Convertir fechas y horas entre zonas horarias
+SELECT now() AT TIME ZONE 'GMT';
+SELECT now() AT TIME ZONE 'PST';
+
+Conozca el día de la semana para una fecha determinada
+
+SELECT extract(DAY FROM now());
+
+Especificar intervalo de tiempo
+    • Hace 3 días: SELECT now() - interval '3 days';
+    • hace 4 horas: SELECT now() - interval '4 hours';
+    • Hace 2 días y 7 horas SELECT now() - interval ‘2 days 7 hours';
+JSON
+Extracto de JSON
+SELECT '{"arr":[2,4,6,8]}'::json -> 'arr' -> 2              # returns 6
+SELECT '{"arr":[2,4,6,8]}'::json #> ARRAY['arr','2']        # returns 6
+Crear matriz JSON
+CREATE TABLE test (
+  j JSON,
+  ja JSON[]
+);
+INSERT INTO test(ja) VALUES (
+  array[
+    '{"name":"alex", "age":20}'::json,
+    '{"name":"peter", "age":24}'::json
+  ]
+);
+PSQL
+
+Renderizar NULLvisible enpsql
+
+Por defecto, NULLes indiferenciable de una cadena vacía.
+\pset null ¤
+
+Modo de visualización extendido
+Pantalla extendida encendida y apagada según el tamaño
+\x auto
+Índices
+Un índice ayuda a recuperar filas de una tabla y su uso es eficiente solo si el número de filas a recuperar es relativamente pequeño. Agregar un índice a una columna le permitirá consultar los datos más rápido, pero las inserciones de datos serán más lentas.
+Un índice parcial cubre solo un subconjunto de los datos de una tabla. Es un índice con una WHEREcláusula. Al reducir el tamaño del índice (menos almacenamiento, más fácil de mantener, más rápido de escanear), su eficiencia aumenta.
+exploración secuencial : la base de datos busca en todos los datos antes de devolver los resultados.
+CREATE INDEX widgets_paid_index ON widgets(paid) WHERE paid IS TRUE;
+Tipos
+    • B-Tree es el índice predeterminado (compatible con todos los tipos de datos) y crea un árbol equilibrado, es decir, la cantidad de datos en ambos lados del árbol es aproximadamente la misma. El número de niveles que se deben recorrer para encontrar filas es siempre similar. Los índices B-Tree son adecuados para consultas de igualdad y rango.
+    • Los índices hash solo son útiles para comparaciones de igualdad y no son seguros para transacciones, deben reconstruirse manualmente después de fallas. No hay una ventaja sustancial sobre el uso de B-Tree
+    • Generalized Inverted (GIN) es útil cuando un índice asigna muchos valores a una fila. Son buenos para indexar valores de matriz y para implementar búsquedas de texto completo.
+    • El árbol de búsqueda generalizado (GiST) permite construir estructuras generales de árbol equilibradas. Se pueden utilizar no solo para operaciones de comparación de igualdad y rango. Se utilizan para indexar los tipos de datos geométricos y la búsqueda de texto completo.
+Varia
+PgBouncer
+PgBouncer es un agrupador de conexiones ligero para PostgreSQL. Una aplicación se conecta pgbouncercomo si fuera un servidor PostgreSQL, pgbouncercrea una conexión con el servidor real o reutiliza una de sus conexiones existentes. Su objetivo es reducir el impacto en el rendimiento de la apertura de nuevas conexiones al servidor PostgreSQL.
+WAL
+PostgreSQL mantiene un registro de escritura anticipada (WAL) en el pg_xlog/subdirectorio del directorio de datos del clúster. El registro registra cada cambio realizado en los archivos de datos de la base de datos.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
